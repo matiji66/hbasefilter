@@ -12,9 +12,9 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<hbase-version>0.98.17-hadoop2</hbase-version>
-		<!-- <version>1.2.0</version> --> 
-		<!-- <hbase-version>1.2.0</hbase-version> -->
+		<!-- <hbase-version>0.98.17-hadoop2</hbase-version> -->
+		<version>1.2.0</version> 
+		<hbase-version>1.2.0</hbase-version>
 	</properties>
 
 	<dependencies>

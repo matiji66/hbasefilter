@@ -13,6 +13,8 @@ import org.apache.hadoop.hbase.MasterNotRunningException;
 import org.apache.hadoop.hbase.NamespaceDescriptor;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.ZooKeeperConnectionException;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.client.Durability;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HConnection;
@@ -39,7 +41,8 @@ public class VehicleOnOffFlagFromJedisToHbase {
 	// static Jedis redis = new Jedis("obd-redis.marathon.pateo.cn", 6379);//
 	// 连接redis
 
-	static Jedis redis = new Jedis(PropertyUtils.getValue(Constant.redis_ip), Integer.valueOf(PropertyUtils.getValue(Constant.redis_port)));// 连接redis
+	static Jedis redis = new Jedis(PropertyUtils.getValue(Constant.redis_ip),
+			Integer.valueOf(PropertyUtils.getValue(Constant.redis_port)));// 连接redis
 	static Logger LOG = LoggerFactory.getLogger(VehicleOnOffFlagFromJedisToHbase.class.getSimpleName());
 	static HBaseAdmin admin = null;
 
@@ -73,6 +76,60 @@ public class VehicleOnOffFlagFromJedisToHbase {
 	
 	
 	public static void main(String[] args) {
+		HConnection connection = null;
+		HTableInterface t1Table = null;
+		String columnFamily = "f1";
+		Put put = null;
+		String tableName = "obd_locus:locus_travel";
+		 
+		Configuration configuration = HBaseConfiguration.create();
+		configuration.set(Constant.hbase_zookeeper_quorum,"10.1.16.36,10.1.16.35,10.1.16.34");
+		configuration.set("hbase.zookeeper.property.clientPort","21810");
+		LOG.info("------------- begain! ------------- ");
+
+		System.out.println("---------------connecting -----");
+		// 建立连接
+		try {
+			connection = HConnectionManager.createConnection(configuration);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		// 获取表
+		try {
+			t1Table = connection.getTable(TableName.valueOf(tableName));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		LOG.info("------------- begain! ------------- ");
+
+		String rowkey = "ROW111";
+		put = new Put(Bytes.toBytes(rowkey));
+		byte[] family = Bytes.toBytes(columnFamily);
+		byte[] qualify_c1 = Bytes.toBytes("c1");
+		byte[] value_on = Bytes.toBytes("on");
+		put.add(family, qualify_c1, value_on);
+		try {
+			t1Table.put(put);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			t1Table.close();
+			LOG.info("------------- Table connection closed! Finished! ------------- ");
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		LOG.info("------------- Finished! ------------- ");
+		System.out.println("---------------Finished -----");
+
+	}
+	
+	public static void redisToHbase() {
+
 
 //		System.out.println(" cf is :" +PropertyUtils.getValue(Constant.columnFamily));
 //		System.exit(0);
@@ -98,6 +155,7 @@ public class VehicleOnOffFlagFromJedisToHbase {
 		// configuration.addResource("/usr/local/hbase-1.0.1.1/conf/hbase-site.xml");
 		// configuration.set(TableInputFormat.INPUT_TABLE,"obd_minix:vehicle_on_off_flag");
 
+		
 		try {
 			admin = new HBaseAdmin(configuration);
 			// create namespace named "obd_minix" 
@@ -225,5 +283,8 @@ public class VehicleOnOffFlagFromJedisToHbase {
 		// status string from deserializer
 		// time int from deserializer
 
+	
 	}
+	
+	
 }

@@ -2,6 +2,7 @@ package com.pateo.hbase.defined.comparator;
 
 import java.io.IOException;
 
+import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterBase;
@@ -70,5 +71,11 @@ public class MySkipFilter extends FilterBase {
 
 	public String toString() {
 		return getClass().getSimpleName() + " " + this.filter.toString();
+	}
+
+	@Override
+	public ReturnCode filterKeyValue(Cell v) throws IOException {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

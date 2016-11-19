@@ -6,9 +6,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.Cell;
 import org.apache.hadoop.hbase.CellUtil;
 import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.KeyValue;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.HBaseAdmin;
 import org.apache.hadoop.hbase.client.HConnection;
 import org.apache.hadoop.hbase.client.HConnectionManager;
@@ -22,18 +20,19 @@ import org.apache.hadoop.hbase.filter.CompareFilter.CompareOp;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterList;
 import org.apache.hadoop.hbase.filter.LongComparator;
-import org.apache.hadoop.hbase.filter.NullComparator;
 import org.apache.hadoop.hbase.filter.QualifierFilter;
 import org.apache.hadoop.hbase.filter.RegexStringComparator;
 import org.apache.hadoop.hbase.filter.SingleColumnValueFilter;
 import org.apache.hadoop.hbase.filter.SubstringComparator;
 import org.apache.hadoop.hbase.filter.ValueFilter;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.hadoop.util.StringUtils;
 
 import com.pateo.constant.Constant;
 import com.pateo.utils.PropertyUtils;
 
+
+
+import com.pateo.hbase.defined.comparator.CustomNumberComparator;
 /**
  *  scan 'test:user', {COLUMNS =>'basic:age', LIMIT => 10}
  * 
@@ -63,15 +62,15 @@ public class CompareTest {
 
 	public static void main(String[] args) throws IOException {
 
-		byte[] bytes = Bytes.toBytes("");
-		
-		if (null ==Bytes.toString(bytes)) {
-			System.out.println(" ---- null to bytes--" + Bytes.toString(bytes).length() + "--null-" );
-			
-		}else if ("" == Bytes.toString(bytes)) {
-			System.out.println(" ---- null to bytes--" + Bytes.toString(bytes).length() + "--''-" );
-		}
-		
+//		byte[] bytes = Bytes.toBytes("");
+//		
+//		if (null ==Bytes.toString(bytes)) {
+//			System.out.println(" ---- null to bytes--" + Bytes.toString(bytes).length() + "--null-" );
+//			
+//		}else if ("" == Bytes.toString(bytes)) {
+//			System.out.println(" ---- null to bytes--" + Bytes.toString(bytes).length() + "--''-" );
+//		}
+
 		Configuration configuration = HBaseConfiguration.create();
 		configuration.set(Constant.hbase_zookeeper_quorum,
 				PropertyUtils.getValue(Constant.hbase_zookeeper_quorum));
@@ -130,7 +129,16 @@ public class CompareTest {
                 );
 
 //		filterList.addFilter(singleColumnValueFilter);
-		
+
+		SingleColumnValueFilter bounds = new SingleColumnValueFilter(  
+		        Bytes.toBytes("basic"),   
+		        Bytes.toBytes("age"),
+		        CompareFilter.CompareOp.LESS,   
+		        new CustomNumberComparator(Bytes.toBytes(80.0),"double" )
+//		        new CustomNumberComparator(Bytes.toBytes(18),"int" ) // 支持性不好
+//		        new CustomNumberComparator(Bytes.toBytes(18.0),"float" ) // 支持性不好 
+		        );
+//		filterList.addFilter(bounds);			
 		// 7. 字符串比较 ，自定义的比较器传入我们自己定义的两个参数
 //		ByteArrayComparable;
 		SingleColumnValueFilter nullFilter = new SingleColumnValueFilter(  
@@ -141,6 +149,7 @@ public class CompareTest {
 		        );
 		filterList.addFilter(nullFilter);
  
+	
 		SingleColumnValueFilter scvf = new SingleColumnValueFilter(  
 		        Bytes.toBytes("basic"),   
 		        Bytes.toBytes("age"),   
@@ -150,17 +159,8 @@ public class CompareTest {
 //		        new CustomNumberComparator(Bytes.toBytes(18.0),"float" ) // 支持性不好 
 		        );
 		filterList.addFilter(scvf);
-		SingleColumnValueFilter bounds = new SingleColumnValueFilter(  
-		        Bytes.toBytes("basic"),   
-		        Bytes.toBytes("age"),   
-		        CompareFilter.CompareOp.LESS,   
-		        new CustomNumberComparator(Bytes.toBytes(80.0),"double" )
-//		        new CustomNumberComparator(Bytes.toBytes(18),"int" ) // 支持性不好
-//		        new CustomNumberComparator(Bytes.toBytes(18.0),"float" ) // 支持性不好 
-		        );
-		filterList.addFilter(bounds);		
-		scan.setFilter(filterList);
 		
+		scan.setFilter(filterList);
 		System.out.println("-------------------begain scan ----------------");
 
 		ResultScanner ss = t1Table.getScanner(scan);
@@ -170,7 +170,7 @@ public class CompareTest {
 				Cell cell = rawCells[i];
 				String qualifier = Bytes.toString(CellUtil.cloneQualifier(cell));
 				String value = Bytes.toString(CellUtil.cloneValue(cell));
-				System.out.println(qualifier + "=------------" + value);
+				System.out.println(qualifier + "------------" + value);
 			}
 		}
 		System.out.println("-------------------scan end ----------------");
